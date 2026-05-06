@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0e0720" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Emosense" />
+  <title>Emosense</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0e0720;
+      --surface: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.25);
+      --border-active: rgba(255,255,255,0.55);
+      --text: #ffffff;
+      --text-muted: rgba(255,255,255,0.58);
+      --accent: #c084fc;
+      --accent2: #f0abfc;
+      --warm: #fda4af;
+      --teal: #67e8f9;
+      --r: 20px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%; width: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Jost', sans-serif;
+      font-weight: 400;
+      overflow: hidden;
+      position: fixed;
+    }
+
+    .orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .orb  { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.2; animation: drift 18s ease-in-out infinite alternate; }
+    .orb1 { width: 420px; height: 420px; background: #7c3aed; top: -120px; left: -100px; animation-delay: 0s; }
+    .orb2 { width: 380px; height: 380px; background: #be185d; bottom: -120px; right: -80px; animation-delay: -6s; }
+    .orb3 { width: 260px; height: 260px; background: #0891b2; top: 38%; left: 38%; animation-delay: -12s; }
+    @keyframes drift {
+      0%   { transform: translate(0,0) scale(1); }
+      50%  { transform: translate(28px,-36px) scale(1.07); }
+      100% { transform: translate(-18px,28px) scale(0.95); }
+    }
+
+    #app { position: relative; z-index: 1; height: 100%; }
+
+    .screen {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 24px 20px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.45s ease, transform 0.45s ease;
+      transform: translateY(14px);
+    }
+    .screen.active { opacity: 1; pointer-events: all; transform: translateY(0); }
+    .screen.exit   { opacity: 0; transform: translateY(-14px); }
+
+    /* INTRO */
+    .logo-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3.2rem, 13vw, 5.5rem);
+      font-weight: 700; letter-spacing: 0.1em;
+      background: linear-gradient(135deg, #f0abfc 0%, #c084fc 45%, #fda4af 100%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; line-height: 1;
+    }
+    .logo-sub {
+      font-size: 0.75rem; letter-spacing: 0.38em;
+      text-transform: uppercase; color: var(--text-muted);
+      margin-top: 10px; font-weight: 500;
+    }
+    .intro-copy {
+      text-align: center; color: rgba(255,255,255,0.65);
+      font-size: 0.97rem; line-height: 1.75;
+      max-width: 310px; margin: 32px 0;
+    }
+    .intro-copy em {
+      color: #f0abfc; font-style: italic;
+      font-family: 'Cormorant Garamond', serif; font-size: 1.15em;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #7c3aed, #be185d);
+      border: none; border-radius: 100px;
+      color: #fff; font-family: 'Jost', sans-serif;
+      font-size: 0.95rem; font-weight: 600; letter-spacing: 0.12em;
+      padding: 15px 44px; cursor: pointer;
+      box-shadow: 0 0 36px rgba(124,58,237,0.45);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-primary:active { transform: scale(0.96); box-shadow: 0 0 12px rgba(124,58,237,0.2); }
+
+    .btn-ghost {
+      background: none; border: 2px solid var(--border);
+      border-radius: 100px; color: var(--text-muted);
+      font-family: 'Jost', sans-serif; font-size: 0.88rem;
+      font-weight: 500; padding: 11px 30px; cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-ghost:active { border-color: var(--accent); color: var(--accent); }
+
+    /* PROGRESS */
+    .progress-bar {
+      width: 100%; max-width: 360px;
+      height: 3px; background: rgba(255,255,255,0.12);
+      border-radius: 3px; overflow: hidden; margin-bottom: 22px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--warm));
+      border-radius: 3px; transition: width 0.5s ease;
+    }
+
+    /* LABELS */
+    .q-label {
+      font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 10px; font-weight: 500;
+    }
+    .q-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.35rem, 5vw, 1.9rem);
+      font-weight: 600; font-style: italic;
+      text-align: center; max-width: 340px;
+      line-height: 1.4; color: #fff; margin-bottom: 28px;
+    }
+    .q-text span { color: #f0abfc; font-style: normal; }
+
+    /* CHOICE GRID */
+    .choice-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px; width: 100%; max-width: 360px;
+    }
+    .choice-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--r);
+      padding: 24px 12px 20px;
+      text-align: center; cursor: pointer;
+      transition: background 0.18s, border-color 0.18s, transform 0.12s;
+      position: relative; overflow: hidden; user-select: none;
+      min-height: 78px; display: flex; align-items: center; justify-content: center;
+    }
+    .choice-card::before {
+      content: ''; position: absolute; inset: 0;
+      border-radius: calc(var(--r) - 2px);
+      background: linear-gradient(135deg, var(--accent), var(--warm));
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .choice-card:active { transform: scale(0.95); }
+    .choice-card.picked::before  { opacity: 0.2; }
+    .choice-card.picked { border-color: var(--border-active); }
+
+    .choice-name {
+      font-size: 1rem; font-weight: 600; color: #fff;
+      position: relative; z-index: 1;
+      line-height: 1.2; letter-spacing: 0.03em;
+    }
+
+    /* SWIPE */
+    .swipe-area {
+      position: relative; width: 100%; max-width: 340px;
+      height: 185px; margin-bottom: 28px;
+    }
+    .swipe-card {
+      position: absolute; inset: 0;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 24px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      cursor: grab; user-select: none;
+      will-change: transform; touch-action: none;
+    }
+    .swipe-card:active { cursor: grabbing; }
+
+    .swipe-card-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem; font-weight: 700; color: #fff; letter-spacing: 0.04em;
+    }
+    .swipe-card-desc {
+      font-size: 0.82rem; color: rgba(255,255,255,0.55);
+      margin-top: 10px; text-align: center;
+      padding: 0 24px; line-height: 1.5;
+    }
+
+    .swipe-overlay {
+      position: absolute; inset: 0; border-radius: 22px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; font-weight: 700; letter-spacing: 0.1em;
+      opacity: 0; pointer-events: none; transition: opacity 0.08s; z-index: 10;
+    }
+    .swipe-overlay.no  { background: rgba(253,164,175,0.12); color: var(--warm); }
+    .swipe-overlay.yes { background: rgba(103,232,249,0.12); color: var(--teal); }
+
+    .swipe-hint {
+      display: flex; gap: 44px; align-items: center;
+      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .swipe-hint-left  { color: var(--warm); }
+    .swipe-hint-right { color: var(--teal); }
+
+    /* RESULT */
+    .result-glow {
+      width: 160px; height: 160px; border-radius: 50%;
+      background: radial-gradient(circle, #c084fc 0%, transparent 70%);
+      opacity: 0.35; position: absolute;
+      animation: pulse 3s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{transform:scale(1);opacity:0.35}50%{transform:scale(1.18);opacity:0.55} }
+
+    .result-icon {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed, #be185d);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem; font-weight: 700; color: #fff;
+      position: relative; z-index: 1;
+    }
+    .result-label {
+      font-size: 0.7rem; letter-spacing: 0.35em; text-transform: uppercase;
+      color: var(--text-muted); margin-top: 22px; margin-bottom: 8px; font-weight: 500;
+    }
+    .result-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.6rem, 11vw, 4.2rem); font-weight: 700;
+      background: linear-gradient(135deg, #f0abfc, #fda4af);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; line-height: 1;
+    }
+    .result-category {
+      font-size: 0.82rem; color: var(--text-muted);
+      letter-spacing: 0.14em; margin-top: 10px; font-weight: 500;
+    }
+    .result-desc {
+      text-align: center; color: rgba(255,255,255,0.68);
+      font-size: 0.92rem; line-height: 1.72; max-width: 300px;
+      margin: 22px 0 30px;
+    }
+    .result-buttons { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+    /* HISTORY BTN */
+    .history-btn {
+      position: fixed; top: 18px; right: 18px; z-index: 100;
+      width: 42px; height: 42px; border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #fff; font-size: 1.3rem; line-height: 1;
+      transition: background 0.2s;
+    }
+    .history-btn:active { background: rgba(255,255,255,0.12); }
+
+    /* HISTORY PANEL */
+    .history-panel {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(8,2,18,0.92); backdrop-filter: blur(14px);
+      display: flex; flex-direction: column;
+      padding: 60px 22px 24px;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .history-panel.open { opacity: 1; pointer-events: all; }
+    .history-panel h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem; font-weight: 700; margin-bottom: 22px; color: #fff;
+    }
+    .history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .history-item {
+      background: var(--surface); border: 2px solid var(--border);
+      border-radius: 14px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .history-item-dot {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed, #be185d); flex-shrink: 0;
+    }
+    .history-item-info { flex: 1; }
+    .history-item-name { font-size: 1rem; font-weight: 600; color: #fff; }
+    .history-item-cat  { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+    .history-item-time { font-size: 0.7rem; color: var(--text-muted); flex-shrink: 0; text-align: right; font-weight: 500; }
+    .history-empty { color: var(--text-muted); font-size: 0.92rem; text-align: center; padding-top: 40px; }
+    .history-close {
+      position: absolute; top: 16px; right: 18px;
+      background: none; border: none; color: var(--text-muted);
+      font-size: 1.6rem; cursor: pointer; line-height: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div class="orbs">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<button class="history-btn" id="historyBtn">≡</button>
+
+<div id="app">
+  <div class="screen active" id="screen-intro">
+    <div class="logo-title">Emosense</div>
+    <div class="logo-sub">Распознай себя</div>
+    <p class="intro-copy">
+      Иногда сложно понять, что именно ты чувствуешь.<br/>
+      <em>Emosense</em> поможет нащупать точное слово для твоего состояния — шаг за шагом.
+    </p>
+    <button class="btn-primary" id="startBtn">Начать</button>
+  </div>
+
+  <div class="screen" id="screen-choice">
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="q-label" id="qLabel">Шаг 1</div>
+    <div class="q-text" id="qText">Что из этого <span>ближе всего</span> к тому, что ты чувствуешь?</div>
+    <div class="choice-grid" id="choiceGrid"></div>
+  </div>
+
+  <div class="screen" id="screen-swipe">
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill2" style="width:0%"></div>
+    </div>
+    <div class="q-label" id="qLabel2">Уточнение</div>
+    <div class="q-text">Это чувство <span>близко</span> тебе сейчас?</div>
+    <div class="swipe-area">
+      <div class="swipe-card" id="swipeCard">
+        <div class="swipe-overlay no"  id="swipeNo">✕ НЕТ</div>
+        <div class="swipe-overlay yes" id="swipeYes">✓ ДА</div>
+        <div class="swipe-card-name" id="swipeWord">Тревога</div>
+        <div class="swipe-card-desc" id="swipeDesc"></div>
+      </div>
+    </div>
+    <div class="swipe-hint">
+      <span class="swipe-hint-left">← Не моё</span>
+      <span class="swipe-hint-right">Моё →</span>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-result">
+    <div style="position:relative;display:flex;align-items:center;justify-content:center;width:160px;height:160px;margin-bottom:4px;">
+      <div class="result-glow"></div>
+      <div class="result-icon">✦</div>
+    </div>
+    <div class="result-label">Твоё чувство</div>
+    <div class="result-name" id="resultName">Тревога</div>
+    <div class="result-category" id="resultCategory">Страх · уточнённое</div>
+    <p class="result-desc" id="resultDesc"></p>
+    <div class="result-buttons">
+      <button class="btn-primary" id="restartBtn">Начать заново</button>
+      <button class="btn-ghost" id="saveBtn">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div class="history-panel" id="historyPanel">
+  <button class="history-close" id="historyClose">✕</button>
+  <h2>История</h2>
+  <div class="history-list" id="historyList"></div>
+</div>
+
+<script>
+const EMOTIONS = {
+  ГНЕВ:   { children: ["БЕШЕНСТВО","ЯРОСТЬ","НЕНАВИСТЬ","ИСТЕРИЯ","ЗЛОСТЬ","РАЗДРАЖЕНИЕ","ПРЕЗРЕНИЕ","НЕГОДОВАНИЕ","ОБИДА","РЕВНОСТЬ","УЯЗВЛЁННОСТЬ","ДОСАДА","ЗАВИСТЬ","НЕПРИЯЗНЬ","ВОЗМУЩЕНИЕ","ОТВРАЩЕНИЕ"] },
+  СТРАХ:  { children: ["УЖАС","ОТЧАЯНИЕ","ИСПУГ","ОЦЕПЕНЕНИЕ","ПОДОЗРЕНИЕ","ТРЕВОГА","ОШАРАШЕННОСТЬ","БЕСПОКОЙСТВО","УНИЖЕНИЕ","ЗАМЕШАТЕЛЬСТВО","РАСТЕРЯННОСТЬ","ВИНА","СТЫД","СОМНЕНИЕ","ЗАСТЕНЧИВОСТЬ","ОПАСЕНИЕ","СМУЩЕНИЕ","СЛОМЛЕННОСТЬ","НАДМЕННОСТЬ","ОШЕЛОМЛЁННОСТЬ"] },
+  ГРУСТЬ: { children: ["ГОРЕЧЬ","ТОСКА","СКОРБЬ","ЛЕНЬ","ЖАЛОСТЬ","ОТРЕШЁННОСТЬ","БЕСПОМОЩНОСТЬ","ДУШЕВНАЯ БОЛЬ","БЕЗНАДЁЖНОСТЬ","ОТЧУЖДЁННОСТЬ","РАЗОЧАРОВАНИЕ","ПОТРЯСЕНИЕ","СОЖАЛЕНИЕ","СКУКА","БЕЗЫСХОДНОСТЬ","ПЕЧАЛЬ","ЗАГНАННОСТЬ"] },
+  РАДОСТЬ:{ children: ["СЧАСТЬЕ","ВОСТОРГ","ЛИКОВАНИЕ","ПРИПОДНЯТОСТЬ","ОЖИВЛЕНИЕ","УМИРОТВОРЕНИЕ","УВЛЕЧЕНИЕ","ИНТЕРЕС","ЗАБОТА","ОЖИДАНИЕ","ВОЗБУЖДЕНИЕ","ПРЕДВКУШЕНИЕ","НАДЕЖДА","ЛЮБОПЫТСТВО","ОСВОБОЖДЕНИЕ","ПРИНЯТИЕ","НЕТЕРПЕНИЕ","ВЕРА","ИЗУМЛЕНИЕ"] },
+  ЛЮБОВЬ: { children: ["НЕЖНОСТЬ","ТЕПЛОТА","СОЧУВСТВИЕ","БЛАЖЕНСТВО","ДОВЕРИЕ","БЕЗОПАСНОСТЬ","БЛАГОДАРНОСТЬ","СПОКОЙСТВИЕ","СИМПАТИЯ","ГОРДОСТЬ","УВАЖЕНИЕ","САМОЦЕННОСТЬ","ВЛЮБЛЁННОСТЬ","ЛЮБОВЬ К СЕБЕ","ОЧАРОВАННОСТЬ","СМИРЕНИЕ","ИСКРЕННОСТЬ","ДРУЖЕЛЮБИЕ","ДОБРОТА","ВЗАИМОВЫРУЧКА"] }
+};
+const CATEGORY_KEYS = Object.keys(EMOTIONS);
+
+const DESCRIPTIONS = {
+  ГНЕВ:"Что-то вызвало жаркое сопротивление или протест.",
+  СТРАХ:"Внутри есть что-то напряжённое, настороженное или сжатое.",
+  ГРУСТЬ:"Что-то утрачено, недостаёт или давит на душу.",
+  РАДОСТЬ:"Внутри есть лёгкость, тепло или предвкушение.",
+  ЛЮБОВЬ:"Ты чувствуешь связь, тепло или принятие.",
+  БЕШЕНСТВО:"Крайняя форма гнева — контроль почти утрачен.",
+  ЯРОСТЬ:"Сильный огонь внутри, требующий выхода.",
+  НЕНАВИСТЬ:"Глубокое неприятие чего-то или кого-то.",
+  ЗЛОСТЬ:"Острая реакция на нарушение границ или несправедливость.",
+  РАЗДРАЖЕНИЕ:"Мелкое, но устойчивое напряжение от чего-то надоедливого.",
+  ОБИДА:"Боль от того, что тебя не поняли или поступили несправедливо.",
+  ТРЕВОГА:"Неясное предчувствие чего-то плохого, неопределённость.",
+  БЕСПОКОЙСТВО:"Забота о чём-то важном, смешанная с неуверенностью.",
+  ВИНА:"Ощущение, что ты поступил не так, как должен был.",
+  СТЫД:"Чувство, что ты сам по себе неправильный или недостаточный.",
+  ГОРЕЧЬ:"Боль от чего-то несправедливого или потерянного.",
+  ТОСКА:"Тихая, глубокая грусть по чему-то далёкому.",
+  РАЗОЧАРОВАНИЕ:"Несоответствие между ожиданием и реальностью.",
+  ПЕЧАЛЬ:"Спокойная, мягкая грусть.",
+  СКУКА:"Ощущение пустоты и отсутствия смысла в моменте.",
+  СЧАСТЬЕ:"Ощущение полноты и всё-правильности.",
+  ВОСТОРГ:"Переполняющая радость, которую хочется выразить.",
+  УМИРОТВОРЕНИЕ:"Глубокий покой внутри, гармония с моментом.",
+  НАДЕЖДА:"Вера в то, что хорошее впереди.",
+  ЛЮБОПЫТСТВО:"Желание узнать, исследовать, открыть.",
+  НЕЖНОСТЬ:"Бережное тёплое чувство к кому-то или чему-то.",
+  ТЕПЛОТА:"Мягкое, уютное ощущение близости.",
+  БЛАГОДАРНОСТЬ:"Осознание ценности того, что есть.",
+  ДОВЕРИЕ:"Ощущение безопасности рядом с кем-то.",
+  СПОКОЙСТВИЕ:"Тихое равновесие, без тревоги и суеты.",
+  ГОРДОСТЬ:"Удовлетворение от себя или кого-то близкого.",
+  СМИРЕНИЕ:"Принятие того, что не в твоей власти.",
+  ИСКРЕННОСТЬ:"Желание быть настоящим, без масок.",
+  УЖАС:"Парализующий страх, потеря ощущения безопасности.",
+  ОТЧАЯНИЕ:"Ощущение, что выхода нет и ничего не изменить.",
+  ОТЧУЖДЁННОСТЬ:"Чувство оторванности от людей или от самого себя.",
+  СОЖАЛЕНИЕ:"Боль от того, что сделано или упущено.",
+  ВОЗБУЖДЕНИЕ:"Сильный внутренний подъём и готовность к действию.",
+  ПРЕДВКУШЕНИЕ:"Приятное ожидание чего-то хорошего.",
+  ВЛЮБЛЁННОСТЬ:"Лёгкое, летящее чувство к кому-то особенному.",
+};
+
+let state = { phase:'intro', chosenCategory:null, choiceRounds:[], swipeQueue:[], swipeIndex:0, matches:[] };
+
+function reset() {
+  state = { phase:'intro', chosenCategory:null, choiceRounds:[], swipeQueue:[], swipeIndex:0, matches:[] };
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    if (s.id !== id) { s.classList.add('exit'); setTimeout(() => s.classList.remove('active','exit'), 480); }
+  });
+  setTimeout(() => document.getElementById(id).classList.add('active'), 30);
+}
+
+function setProgress(r) {
+  const p = Math.round(Math.min(1,r)*100)+'%';
+  document.getElementById('progressFill').style.width = p;
+  document.getElementById('progressFill2').style.width = p;
+}
+
+/* ── CATEGORY CHOICE ── */
+function startCategoryChoice() {
+  // Show 4 random categories; 5th goes to swipe fallback
+  const cats = shuffle([...CATEGORY_KEYS]);
+  renderChoiceScreen(
+    cats.slice(0,4),
+    'Шаг 1 — выбери общее',
+    `Что из этого <span>ближе всего</span> к тому, что ты чувствуешь?`,
+    0.1,
+    (chosen) => {
+      state.chosenCategory = chosen;
+      state.matches = [];
+      const children = shuffle([...EMOTIONS[chosen].children]);
+      buildRounds(children);
+      runNextRound();
+    }
+  );
+}
+
+/* ── BUILD ROUNDS OF 4 ── */
+function buildRounds(arr) {
+  state.choiceRounds = [];
+  state.swipeQueue   = [];
+  const copy = [...arr];
+  while (copy.length >= 4) state.choiceRounds.push(copy.splice(0,4));
+  state.swipeQueue = copy; // remainder (0-3 items)
+}
+
+let _roundIdx = 0;
+let _totalRounds = 0;
+
+function runNextRound() {
+  if (state.choiceRounds.length === 0) { startSwipePhase(); return; }
+  const round = state.choiceRounds.shift();
+  _roundIdx++;
+  _totalRounds = _totalRounds || (_roundIdx + state.choiceRounds.length);
+  const prog = 0.12 + (_roundIdx / (_totalRounds + 2)) * 0.55;
+  renderChoiceScreen(
+    round,
+    `Шаг ${_roundIdx + 1} — уточни`,
+    `Какое из этих чувств <span>резонирует</span> с тобой сейчас?`,
+    prog,
+    (chosen) => {
+      state.matches.push(chosen);
+      state.swipeQueue.unshift(chosen); // put chosen into swipe for confirmation
+      runNextRound();
+    }
+  );
+}
+
+/* ── GENERIC CHOICE RENDERER ── */
+function renderChoiceScreen(items, label, qHTML, progress, onPick) {
+  const grid = document.getElementById('choiceGrid');
+  grid.innerHTML = '';
+  let picked = false;
+  items.forEach(name => {
+    const card = document.createElement('div');
+    card.className = 'choice-card';
+    card.innerHTML = `<div class="choice-name">${name}</div>`;
+    card.addEventListener('click', () => {
+      if (picked) return; picked = true;
+      card.classList.add('picked');
+      setTimeout(() => onPick(name), 270);
+    });
+    grid.appendChild(card);
+  });
+  document.getElementById('qLabel').textContent = label;
+  document.getElementById('qText').innerHTML = qHTML;
+  setProgress(progress);
+  showScreen('screen-choice');
+}
+
+/* ── SWIPE PHASE ── */
+function startSwipePhase() {
+  if (state.swipeQueue.length === 0) { endWithResult(); return; }
+  state.swipeIndex = 0;
+  setProgress(0.72);
+  showNextSwipe();
+  showScreen('screen-swipe');
+}
+
+function showNextSwipe() {
+  if (state.swipeIndex >= state.swipeQueue.length) { endWithResult(); return; }
+  const word = state.swipeQueue[state.swipeIndex];
+  document.getElementById('swipeWord').textContent = word;
+  document.getElementById('swipeDesc').textContent = DESCRIPTIONS[word] || DESCRIPTIONS[state.chosenCategory] || '';
+  document.getElementById('swipeNo').style.opacity  = '0';
+  document.getElementById('swipeYes').style.opacity = '0';
+  const card = document.getElementById('swipeCard');
+  card.style.transition = 'none';
+  card.style.transform  = 'translateX(0) rotate(0deg)';
+  card.style.opacity    = '1';
+  const prog = 0.72 + (state.swipeIndex / state.swipeQueue.length) * 0.24;
+  setProgress(prog);
+  document.getElementById('qLabel2').textContent = `${state.swipeIndex+1} из ${state.swipeQueue.length}`;
+}
+
+/* ── SWIPE GESTURE ── */
+let drag = { active:false, startX:0, currentX:0 };
+const swipeCardEl = document.getElementById('swipeCard');
+
+function onDragStart(x) { drag.active=true; drag.startX=x; drag.currentX=x; }
+function onDragMove(x) {
+  if (!drag.active) return;
+  drag.currentX = x;
+  const dx = drag.currentX - drag.startX;
+  swipeCardEl.style.transition = 'none';
+  swipeCardEl.style.transform  = `translateX(${dx}px) rotate(${dx*0.055}deg)`;
+  const p = Math.min(1, Math.abs(dx)/80);
+  if      (dx < -20) { document.getElementById('swipeNo').style.opacity=p;  document.getElementById('swipeYes').style.opacity=0; }
+  else if (dx >  20) { document.getElementById('swipeYes').style.opacity=p; document.getElementById('swipeNo').style.opacity=0; }
+  else               { document.getElementById('swipeNo').style.opacity=0;  document.getElementById('swipeYes').style.opacity=0; }
+}
+function onDragEnd() {
+  if (!drag.active) return;
+  drag.active = false;
+  const dx = drag.currentX - drag.startX;
+  if      (dx < -60) swipeDecide('no');
+  else if (dx >  60) swipeDecide('yes');
+  else {
+    swipeCardEl.style.transition = 'transform 0.3s ease';
+    swipeCardEl.style.transform  = 'translateX(0) rotate(0deg)';
+    document.getElementById('swipeNo').style.opacity  = 0;
+    document.getElementById('swipeYes').style.opacity = 0;
+  }
+}
+function swipeDecide(choice) {
+  const dx = choice==='yes' ? 440 : -440;
+  swipeCardEl.style.transition = 'transform 0.38s ease, opacity 0.38s ease';
+  swipeCardEl.style.transform  = `translateX(${dx}px) rotate(${dx*0.05}deg)`;
+  swipeCardEl.style.opacity    = '0';
+  if (choice==='yes') state.matches.push(state.swipeQueue[state.swipeIndex]);
+  state.swipeIndex++;
+  setTimeout(() => {
+    if (state.swipeIndex >= state.swipeQueue.length || state.matches.length >= 3) endWithResult();
+    else showNextSwipe();
+  }, 400);
+}
+
+swipeCardEl.addEventListener('mousedown',  e => onDragStart(e.clientX));
+document.addEventListener('mousemove',     e => { if (drag.active) onDragMove(e.clientX); });
+document.addEventListener('mouseup',       ()  => onDragEnd());
+swipeCardEl.addEventListener('touchstart', e => { e.preventDefault(); onDragStart(e.touches[0].clientX); }, {passive:false});
+document.addEventListener('touchmove',     e => { if (drag.active) { e.preventDefault(); onDragMove(e.touches[0].clientX); } }, {passive:false});
+document.addEventListener('touchend',      ()  => onDragEnd());
+
+/* ── RESULT ── */
+function endWithResult() {
+  let final = state.matches.length > 0
+    ? state.matches[state.matches.length-1]
+    : EMOTIONS[state.chosenCategory].children[Math.floor(Math.random()*4)];
+  document.getElementById('resultName').textContent     = final;
+  document.getElementById('resultCategory').textContent = state.chosenCategory + ' · уточнённое';
+  document.getElementById('resultDesc').textContent     = DESCRIPTIONS[final] || DESCRIPTIONS[state.chosenCategory] || 'Твоё внутреннее состояние сейчас.';
+  setProgress(1);
+  showScreen('screen-result');
+  saveHistory({ name:final, category:state.chosenCategory });
+}
+
+/* ── HISTORY ── */
+function saveHistory(item) {
+  const h = JSON.parse(localStorage.getItem('emo_history')||'[]');
+  h.unshift({ ...item, time: Date.now() });
+  localStorage.setItem('emo_history', JSON.stringify(h.slice(0,60)));
+}
+function renderHistory() {
+  const h = JSON.parse(localStorage.getItem('emo_history')||'[]');
+  const list = document.getElementById('historyList');
+  if (!h.length) { list.innerHTML='<div class="history-empty">Пока нет сохранённых чувств</div>'; return; }
+  list.innerHTML = h.map(i => {
+    const d = new Date(i.time);
+    const t = d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="history-item"><div class="history-item-dot"></div><div class="history-item-info"><div class="history-item-name">${i.name}</div><div class="history-item-cat">${i.category}</div></div><div class="history-item-time">${t}</div></div>`;
+  }).join('');
+}
+
+/* ── UTILS ── */
+function shuffle(a) {
+  for (let i=a.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+/* ── BINDINGS ── */
+document.getElementById('startBtn').addEventListener('click',   () => { reset(); _roundIdx=0; _totalRounds=0; startCategoryChoice(); });
+document.getElementById('restartBtn').addEventListener('click', () => { reset(); _roundIdx=0; _totalRounds=0; startCategoryChoice(); });
+document.getElementById('saveBtn').addEventListener('click', () => {
+  const b = document.getElementById('saveBtn');
+  b.textContent = 'Сохранено ✓'; setTimeout(() => b.textContent='Сохранить', 2000);
+});
+document.getElementById('historyBtn').addEventListener('click',  () => { renderHistory(); document.getElementById('historyPanel').classList.add('open'); });
+document.getElementById('historyClose').addEventListener('click',() => { document.getElementById('historyPanel').classList.remove('open'); });
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
