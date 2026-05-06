@@ -1,339 +1,315 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0e0720" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Emosense" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#d8e5f2"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <meta name="apple-mobile-web-app-title" content="Emosense"/>
   <title>Emosense</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --bg: #0e0720;
-      --surface: rgba(255,255,255,0.07);
-      --border: rgba(255,255,255,0.25);
-      --border-active: rgba(255,255,255,0.55);
-      --text: #ffffff;
-      --text-muted: rgba(255,255,255,0.58);
-      --accent: #c084fc;
-      --accent2: #f0abfc;
-      --warm: #fda4af;
-      --teal: #67e8f9;
-      --r: 20px;
+      --bg:            #edf2f8;
+      --surface:       rgba(255,255,255,0.72);
+      --surface2:      rgba(255,255,255,0.45);
+      --border:        rgba(160,185,215,0.45);
+      --border-strong: rgba(140,168,200,0.70);
+      --text:          #2c3a4a;
+      --text-mid:      #5a7080;
+      --text-muted:    #8aa0b4;
+      --brown:         #a0683c;
+      --brown-light:   #c88c58;
+      --blue-mid:      #7aa0c0;
+      --r:             22px;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
     html, body {
       height: 100%; width: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Jost', sans-serif;
-      font-weight: 400;
-      overflow: hidden;
-      position: fixed;
+      background: var(--bg); color: var(--text);
+      font-family: 'Jost', sans-serif; font-weight: 400;
+      overflow: hidden; position: fixed;
     }
-
-    .orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-    .orb  { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.2; animation: drift 18s ease-in-out infinite alternate; }
-    .orb1 { width: 420px; height: 420px; background: #7c3aed; top: -120px; left: -100px; animation-delay: 0s; }
-    .orb2 { width: 380px; height: 380px; background: #be185d; bottom: -120px; right: -80px; animation-delay: -6s; }
-    .orb3 { width: 260px; height: 260px; background: #0891b2; top: 38%; left: 38%; animation-delay: -12s; }
-    @keyframes drift {
-      0%   { transform: translate(0,0) scale(1); }
-      50%  { transform: translate(28px,-36px) scale(1.07); }
-      100% { transform: translate(-18px,28px) scale(0.95); }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 60% at 20% 15%, rgba(180,210,235,0.5) 0%, transparent 70%),
+        radial-gradient(ellipse 55% 50% at 85% 80%, rgba(200,180,155,0.18) 0%, transparent 65%),
+        radial-gradient(ellipse 80% 70% at 50% 50%, rgba(215,230,245,0.4) 0%, transparent 80%);
     }
-
     #app { position: relative; z-index: 1; height: 100%; }
 
     .screen {
       position: absolute; inset: 0;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      padding: 24px 20px;
+      padding: 28px 22px;
       opacity: 0; pointer-events: none;
-      transition: opacity 0.45s ease, transform 0.45s ease;
-      transform: translateY(14px);
+      transition: opacity 0.42s ease, transform 0.42s ease;
+      transform: translateY(12px);
     }
     .screen.active { opacity: 1; pointer-events: all; transform: translateY(0); }
-    .screen.exit   { opacity: 0; transform: translateY(-14px); }
+    .screen.exit   { opacity: 0; transform: translateY(-12px); }
 
-    /* INTRO */
+    /* ── INTRO ── */
+    .logo-heart { width: 160px; height: 160px; border-radius: 36px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 12px 40px rgba(120,160,200,0.22); }
+    .logo-heart img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .logo-icon { width: 72px; height: 72px; border-radius: 16px; overflow: hidden; margin-bottom: 16px; }
+    .logo-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .logo-title {
       font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(3.2rem, 13vw, 5.5rem);
-      font-weight: 700; letter-spacing: 0.1em;
-      background: linear-gradient(135deg, #f0abfc 0%, #c084fc 45%, #fda4af 100%);
-      -webkit-background-clip: text; background-clip: text;
-      -webkit-text-fill-color: transparent; line-height: 1;
+      font-size: clamp(3rem, 13vw, 5rem);
+      font-weight: 700; letter-spacing: 0.08em;
+      color: var(--text); line-height: 1;
     }
     .logo-sub {
-      font-size: 0.75rem; letter-spacing: 0.38em;
-      text-transform: uppercase; color: var(--text-muted);
-      margin-top: 10px; font-weight: 500;
+      font-size: 0.72rem; letter-spacing: 0.4em; text-transform: uppercase;
+      color: var(--text-muted); margin-top: 8px; font-weight: 500;
     }
     .intro-copy {
-      text-align: center; color: rgba(255,255,255,0.65);
-      font-size: 0.97rem; line-height: 1.75;
-      max-width: 310px; margin: 32px 0;
+      text-align: center; color: var(--text-mid);
+      font-size: 0.95rem; line-height: 1.75;
+      max-width: 310px; margin: 28px 0; font-weight: 300;
     }
-    .intro-copy em {
-      color: #f0abfc; font-style: italic;
-      font-family: 'Cormorant Garamond', serif; font-size: 1.15em;
-    }
+    .intro-copy em { color: var(--brown); font-style: italic; font-family: 'Cormorant Garamond', serif; font-size: 1.12em; }
 
+    /* ── BUTTONS ── */
     .btn-primary {
-      background: linear-gradient(135deg, #7c3aed, #be185d);
-      border: none; border-radius: 100px;
-      color: #fff; font-family: 'Jost', sans-serif;
-      font-size: 0.95rem; font-weight: 600; letter-spacing: 0.12em;
-      padding: 15px 44px; cursor: pointer;
-      box-shadow: 0 0 36px rgba(124,58,237,0.45);
+      background: linear-gradient(135deg, #7a9ec0, #5a7ea0);
+      border: none; border-radius: 100px; color: #fff;
+      font-family: 'Jost', sans-serif; font-size: 0.92rem; font-weight: 600;
+      letter-spacing: 0.12em; padding: 14px 42px; cursor: pointer;
+      box-shadow: 0 6px 24px rgba(100,148,188,0.32);
       transition: transform 0.15s, box-shadow 0.15s;
     }
-    .btn-primary:active { transform: scale(0.96); box-shadow: 0 0 12px rgba(124,58,237,0.2); }
-
+    .btn-primary:active { transform: scale(0.96); box-shadow: 0 2px 8px rgba(100,148,188,0.2); }
     .btn-ghost {
-      background: none; border: 2px solid var(--border);
-      border-radius: 100px; color: var(--text-muted);
-      font-family: 'Jost', sans-serif; font-size: 0.88rem;
-      font-weight: 500; padding: 11px 30px; cursor: pointer;
-      transition: border-color 0.2s, color 0.2s;
+      background: var(--surface2); border: 1.5px solid var(--border-strong);
+      border-radius: 100px; color: var(--text-mid);
+      font-family: 'Jost', sans-serif; font-size: 0.86rem; font-weight: 500;
+      padding: 11px 28px; cursor: pointer; backdrop-filter: blur(8px);
+      transition: background 0.2s;
     }
-    .btn-ghost:active { border-color: var(--accent); color: var(--accent); }
+    .btn-ghost:active { background: rgba(255,255,255,0.8); }
 
-    /* PROGRESS */
+    /* ── PROGRESS ── */
     .progress-bar {
-      width: 100%; max-width: 360px;
-      height: 3px; background: rgba(255,255,255,0.12);
-      border-radius: 3px; overflow: hidden; margin-bottom: 22px;
+      width: 100%; max-width: 360px; height: 3px;
+      background: var(--border); border-radius: 3px;
+      overflow: hidden; margin-bottom: 20px;
     }
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--warm));
+      background: linear-gradient(90deg, var(--blue-mid), var(--brown-light));
       border-radius: 3px; transition: width 0.5s ease;
     }
 
-    /* LABELS */
+    /* ── LABELS ── */
     .q-label {
-      font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase;
+      font-size: 0.68rem; letter-spacing: 0.32em; text-transform: uppercase;
       color: var(--text-muted); margin-bottom: 10px; font-weight: 500;
     }
     .q-text {
       font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(1.35rem, 5vw, 1.9rem);
-      font-weight: 600; font-style: italic;
-      text-align: center; max-width: 340px;
-      line-height: 1.4; color: #fff; margin-bottom: 28px;
+      font-size: clamp(1.3rem, 5vw, 1.85rem);
+      font-weight: 600; font-style: italic; text-align: center;
+      max-width: 340px; line-height: 1.45; color: var(--text); margin-bottom: 26px;
     }
-    .q-text span { color: #f0abfc; font-style: normal; }
+    .q-text span { color: var(--brown); font-style: normal; }
 
-    /* CHOICE GRID */
+    /* ── CHOICE GRID ── */
     .choice-grid {
       display: grid; grid-template-columns: 1fr 1fr;
-      gap: 12px; width: 100%; max-width: 360px;
+      gap: 11px; width: 100%; max-width: 360px;
     }
     .choice-card {
-      background: var(--surface);
-      border: 2px solid var(--border);
-      border-radius: var(--r);
-      padding: 24px 12px 20px;
-      text-align: center; cursor: pointer;
-      transition: background 0.18s, border-color 0.18s, transform 0.12s;
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: var(--r); padding: 22px 12px 18px;
+      text-align: center; cursor: pointer; backdrop-filter: blur(10px);
+      transition: background 0.18s, border-color 0.18s, transform 0.12s, box-shadow 0.18s;
       position: relative; overflow: hidden; user-select: none;
-      min-height: 78px; display: flex; align-items: center; justify-content: center;
+      min-height: 76px; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 12px rgba(100,140,180,0.08);
     }
-    .choice-card::before {
-      content: ''; position: absolute; inset: 0;
-      border-radius: calc(var(--r) - 2px);
-      background: linear-gradient(135deg, var(--accent), var(--warm));
-      opacity: 0; transition: opacity 0.2s;
+    .choice-card::after {
+      content: ''; position: absolute; inset: 0; border-radius: calc(var(--r) - 1px);
+      background: linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 60%);
+      pointer-events: none;
+    }
+    /* Highlight the "carried over" feeling from previous round */
+    .choice-card.carried {
+      border-color: rgba(160,104,60,0.35);
+      background: rgba(200,140,88,0.07);
     }
     .choice-card:active { transform: scale(0.95); }
-    .choice-card.picked::before  { opacity: 0.2; }
-    .choice-card.picked { border-color: var(--border-active); }
+    .choice-card.picked { border-color: var(--brown-light); background: rgba(200,140,88,0.12); box-shadow: 0 0 0 2px rgba(200,140,88,0.2); }
+    .choice-name { font-size: 0.97rem; font-weight: 600; color: var(--text); position: relative; z-index: 1; line-height: 1.2; }
 
-    .choice-name {
-      font-size: 1rem; font-weight: 600; color: #fff;
-      position: relative; z-index: 1;
-      line-height: 1.2; letter-spacing: 0.03em;
+    /* "None of the above" link — only shown in category round */
+    .none-link {
+      margin-top: 16px; font-size: 0.82rem; font-weight: 400;
+      color: var(--text-muted); cursor: pointer; text-align: center;
+      border-bottom: 1px solid rgba(138,160,180,0.35);
+      padding-bottom: 1px; display: none;
+      transition: color 0.2s;
     }
+    .none-link.visible { display: inline-block; }
+    .none-link:active { color: var(--brown); border-color: var(--brown); }
 
-    /* SWIPE */
+    /* ── SWIPE ── */
     .swipe-area {
       position: relative; width: 100%; max-width: 340px;
-      height: 185px; margin-bottom: 28px;
+      height: 182px; margin-bottom: 26px;
     }
     .swipe-card {
-      position: absolute; inset: 0;
-      background: var(--surface);
-      border: 2px solid var(--border);
-      border-radius: 24px;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      cursor: grab; user-select: none;
+      position: absolute; inset: 0; background: var(--surface);
+      border: 1.5px solid var(--border); border-radius: 24px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: grab; user-select: none; backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(100,140,180,0.12);
       will-change: transform; touch-action: none;
     }
+    .swipe-card::after {
+      content: ''; position: absolute; inset: 0; border-radius: 23px;
+      background: linear-gradient(160deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 55%);
+      pointer-events: none;
+    }
     .swipe-card:active { cursor: grabbing; }
-
     .swipe-card-name {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 2.2rem; font-weight: 700; color: #fff; letter-spacing: 0.04em;
+      font-size: 2.1rem; font-weight: 700; color: var(--text);
+      letter-spacing: 0.03em; position: relative; z-index: 1;
     }
     .swipe-card-desc {
-      font-size: 0.82rem; color: rgba(255,255,255,0.55);
-      margin-top: 10px; text-align: center;
-      padding: 0 24px; line-height: 1.5;
+      font-size: 0.8rem; color: var(--text-mid); margin-top: 8px;
+      text-align: center; padding: 0 22px; line-height: 1.5;
+      font-weight: 300; position: relative; z-index: 1;
     }
-
     .swipe-overlay {
       position: absolute; inset: 0; border-radius: 22px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.5rem; font-weight: 700; letter-spacing: 0.1em;
+      font-size: 1.3rem; font-weight: 700; letter-spacing: 0.1em;
       opacity: 0; pointer-events: none; transition: opacity 0.08s; z-index: 10;
     }
-    .swipe-overlay.no  { background: rgba(253,164,175,0.12); color: var(--warm); }
-    .swipe-overlay.yes { background: rgba(103,232,249,0.12); color: var(--teal); }
-
+    .swipe-overlay.no  { background: rgba(160,104,60,0.08); color: var(--brown); }
+    .swipe-overlay.yes { background: rgba(100,160,200,0.10); color: #4a90c0; }
     .swipe-hint {
-      display: flex; gap: 44px; align-items: center;
-      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      display: flex; gap: 40px; align-items: center;
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
     }
-    .swipe-hint-left  { color: var(--warm); }
-    .swipe-hint-right { color: var(--teal); }
+    .swipe-hint-left  { color: var(--brown); }
+    .swipe-hint-right { color: var(--blue-mid); }
 
-    /* RESULT */
-    .result-glow {
-      width: 160px; height: 160px; border-radius: 50%;
-      background: radial-gradient(circle, #c084fc 0%, transparent 70%);
-      opacity: 0.35; position: absolute;
-      animation: pulse 3s ease-in-out infinite;
+    /* ── RESULT ── */
+    .result-orb {
+      width: 140px; height: 140px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(160,190,215,0.35) 0%, rgba(200,140,88,0.12) 55%, transparent 75%);
+      position: absolute; animation: pulse 3.2s ease-in-out infinite;
     }
-    @keyframes pulse { 0%,100%{transform:scale(1);opacity:0.35}50%{transform:scale(1.18);opacity:0.55} }
-
+    @keyframes pulse { 0%,100%{transform:scale(1);opacity:0.8}50%{transform:scale(1.15);opacity:1} }
+    .result-icon-wrap {
+      position: relative; display: flex; align-items: center; justify-content: center;
+      width: 140px; height: 140px; margin-bottom: 4px;
+    }
     .result-icon {
-      width: 80px; height: 80px; border-radius: 50%;
-      background: linear-gradient(135deg, #7c3aed, #be185d);
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2rem; font-weight: 700; color: #fff;
+      width: 80px; height: 80px; border-radius: 18px; overflow: hidden;
       position: relative; z-index: 1;
+      box-shadow: 0 8px 24px rgba(100,140,180,0.25);
     }
+    .result-icon img { width: 100%; height: 100%; object-fit: cover; }
     .result-label {
-      font-size: 0.7rem; letter-spacing: 0.35em; text-transform: uppercase;
-      color: var(--text-muted); margin-top: 22px; margin-bottom: 8px; font-weight: 500;
+      font-size: 0.68rem; letter-spacing: 0.38em; text-transform: uppercase;
+      color: var(--text-muted); margin-top: 20px; margin-bottom: 8px; font-weight: 500;
     }
     .result-name {
       font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(2.6rem, 11vw, 4.2rem); font-weight: 700;
-      background: linear-gradient(135deg, #f0abfc, #fda4af);
-      -webkit-background-clip: text; background-clip: text;
-      -webkit-text-fill-color: transparent; line-height: 1;
+      font-size: clamp(2.5rem, 11vw, 4rem); font-weight: 700;
+      color: var(--text); line-height: 1; letter-spacing: 0.02em;
     }
-    .result-category {
-      font-size: 0.82rem; color: var(--text-muted);
-      letter-spacing: 0.14em; margin-top: 10px; font-weight: 500;
-    }
+    .result-category { font-size: 0.8rem; color: var(--text-muted); letter-spacing: 0.14em; margin-top: 8px; font-weight: 500; }
     .result-desc {
-      text-align: center; color: rgba(255,255,255,0.68);
-      font-size: 0.92rem; line-height: 1.72; max-width: 300px;
-      margin: 22px 0 30px;
+      text-align: center; color: var(--text-mid); font-size: 0.9rem;
+      line-height: 1.72; max-width: 290px; margin: 20px 0 28px; font-weight: 300;
     }
-    .result-buttons { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .result-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
-    /* HISTORY BTN */
+    /* ── HISTORY BTN ── */
     .history-btn {
       position: fixed; top: 18px; right: 18px; z-index: 100;
-      width: 42px; height: 42px; border-radius: 50%;
-      background: rgba(255,255,255,0.06);
-      border: 2px solid var(--border);
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--surface); border: 1.5px solid var(--border-strong);
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: #fff; font-size: 1.3rem; line-height: 1;
-      transition: background 0.2s;
+      cursor: pointer; color: var(--text-mid); font-size: 1.1rem;
+      backdrop-filter: blur(10px); box-shadow: 0 2px 10px rgba(100,140,180,0.12);
     }
-    .history-btn:active { background: rgba(255,255,255,0.12); }
+    .history-btn:active { background: rgba(255,255,255,0.9); }
 
-    /* HISTORY PANEL */
+    /* ── HISTORY PANEL ── */
     .history-panel {
       position: fixed; inset: 0; z-index: 200;
-      background: rgba(8,2,18,0.92); backdrop-filter: blur(14px);
-      display: flex; flex-direction: column;
-      padding: 60px 22px 24px;
+      background: rgba(220,232,244,0.90); backdrop-filter: blur(18px);
+      display: flex; flex-direction: column; padding: 60px 20px 24px;
       opacity: 0; pointer-events: none; transition: opacity 0.3s;
     }
     .history-panel.open { opacity: 1; pointer-events: all; }
-    .history-panel h2 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2.2rem; font-weight: 700; margin-bottom: 22px; color: #fff;
-    }
-    .history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .history-panel h2 { font-family: 'Cormorant Garamond', serif; font-size: 2.1rem; font-weight: 700; margin-bottom: 20px; color: var(--text); }
+    .history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; }
     .history-item {
-      background: var(--surface); border: 2px solid var(--border);
-      border-radius: 14px; padding: 14px 16px;
-      display: flex; align-items: center; gap: 14px;
+      background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px;
+      padding: 13px 15px; display: flex; align-items: center; gap: 13px;
+      backdrop-filter: blur(8px);
     }
-    .history-item-dot {
-      width: 34px; height: 34px; border-radius: 50%;
-      background: linear-gradient(135deg, #7c3aed, #be185d); flex-shrink: 0;
-    }
+    .history-item-dot { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, #7aa0c0, #c88c58); }
     .history-item-info { flex: 1; }
-    .history-item-name { font-size: 1rem; font-weight: 600; color: #fff; }
-    .history-item-cat  { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
-    .history-item-time { font-size: 0.7rem; color: var(--text-muted); flex-shrink: 0; text-align: right; font-weight: 500; }
-    .history-empty { color: var(--text-muted); font-size: 0.92rem; text-align: center; padding-top: 40px; }
-    .history-close {
-      position: absolute; top: 16px; right: 18px;
-      background: none; border: none; color: var(--text-muted);
-      font-size: 1.6rem; cursor: pointer; line-height: 1;
-    }
+    .history-item-name { font-size: 0.97rem; font-weight: 600; color: var(--text); }
+    .history-item-cat  { font-size: 0.73rem; color: var(--text-muted); margin-top: 2px; }
+    .history-item-time { font-size: 0.68rem; color: var(--text-muted); flex-shrink: 0; text-align: right; }
+    .history-empty { color: var(--text-muted); font-size: 0.9rem; text-align: center; padding-top: 40px; }
+    .history-close { position: absolute; top: 16px; right: 18px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
   </style>
 </head>
 <body>
 
-<div class="orbs">
-  <div class="orb orb1"></div>
-  <div class="orb orb2"></div>
-  <div class="orb orb3"></div>
-</div>
-
 <button class="history-btn" id="historyBtn">≡</button>
 
 <div id="app">
+
+  <!-- INTRO -->
   <div class="screen active" id="screen-intro">
-    <div class="logo-title">Emosense</div>
-    <div class="logo-sub">Распознай себя</div>
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div class="logo-heart"><img src="icon-192.png" alt=""/></div>
+      <div class="logo-title">Emosense</div>
+      <div class="logo-sub">Распознай себя</div>
+    </div>
     <p class="intro-copy">
       Иногда сложно понять, что именно ты чувствуешь.<br/>
-      <em>Emosense</em> поможет нащупать точное слово для твоего состояния — шаг за шагом.
+      <em>Emosense</em> поможет нащупать точное слово — шаг за шагом.
     </p>
     <button class="btn-primary" id="startBtn">Начать</button>
   </div>
 
+  <!-- CHOICE -->
   <div class="screen" id="screen-choice">
-    <div class="progress-bar">
-      <div class="progress-fill" id="progressFill" style="width:0%"></div>
-    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
     <div class="q-label" id="qLabel">Шаг 1</div>
-    <div class="q-text" id="qText">Что из этого <span>ближе всего</span> к тому, что ты чувствуешь?</div>
+    <div class="q-text" id="qText"></div>
     <div class="choice-grid" id="choiceGrid"></div>
+    <span class="none-link" id="noneLink">Ничего из вышеперечисленного</span>
   </div>
 
+  <!-- SWIPE -->
   <div class="screen" id="screen-swipe">
-    <div class="progress-bar">
-      <div class="progress-fill" id="progressFill2" style="width:0%"></div>
-    </div>
-    <div class="q-label" id="qLabel2">Уточнение</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill2" style="width:0%"></div></div>
+    <div class="q-label" id="qLabel2">Финальная проверка</div>
     <div class="q-text">Это чувство <span>близко</span> тебе сейчас?</div>
     <div class="swipe-area">
       <div class="swipe-card" id="swipeCard">
         <div class="swipe-overlay no"  id="swipeNo">✕ НЕТ</div>
         <div class="swipe-overlay yes" id="swipeYes">✓ ДА</div>
-        <div class="swipe-card-name" id="swipeWord">Тревога</div>
+        <div class="swipe-card-name" id="swipeWord"></div>
         <div class="swipe-card-desc" id="swipeDesc"></div>
       </div>
     </div>
@@ -343,14 +319,15 @@
     </div>
   </div>
 
+  <!-- RESULT -->
   <div class="screen" id="screen-result">
-    <div style="position:relative;display:flex;align-items:center;justify-content:center;width:160px;height:160px;margin-bottom:4px;">
-      <div class="result-glow"></div>
-      <div class="result-icon">✦</div>
+    <div class="result-icon-wrap">
+      <div class="result-orb"></div>
+      <div class="result-icon"><img src="icon-192.png" alt=""/></div>
     </div>
     <div class="result-label">Твоё чувство</div>
-    <div class="result-name" id="resultName">Тревога</div>
-    <div class="result-category" id="resultCategory">Страх · уточнённое</div>
+    <div class="result-name" id="resultName">—</div>
+    <div class="result-category" id="resultCategory"></div>
     <p class="result-desc" id="resultDesc"></p>
     <div class="result-buttons">
       <button class="btn-primary" id="restartBtn">Начать заново</button>
@@ -359,6 +336,7 @@
   </div>
 </div>
 
+<!-- HISTORY -->
 <div class="history-panel" id="historyPanel">
   <button class="history-close" id="historyClose">✕</button>
   <h2>История</h2>
@@ -366,6 +344,7 @@
 </div>
 
 <script>
+// ─── DATA ───────────────────────────────────────────────────────
 const EMOTIONS = {
   ГНЕВ:   { children: ["БЕШЕНСТВО","ЯРОСТЬ","НЕНАВИСТЬ","ИСТЕРИЯ","ЗЛОСТЬ","РАЗДРАЖЕНИЕ","ПРЕЗРЕНИЕ","НЕГОДОВАНИЕ","ОБИДА","РЕВНОСТЬ","УЯЗВЛЁННОСТЬ","ДОСАДА","ЗАВИСТЬ","НЕПРИЯЗНЬ","ВОЗМУЩЕНИЕ","ОТВРАЩЕНИЕ"] },
   СТРАХ:  { children: ["УЖАС","ОТЧАЯНИЕ","ИСПУГ","ОЦЕПЕНЕНИЕ","ПОДОЗРЕНИЕ","ТРЕВОГА","ОШАРАШЕННОСТЬ","БЕСПОКОЙСТВО","УНИЖЕНИЕ","ЗАМЕШАТЕЛЬСТВО","РАСТЕРЯННОСТЬ","ВИНА","СТЫД","СОМНЕНИЕ","ЗАСТЕНЧИВОСТЬ","ОПАСЕНИЕ","СМУЩЕНИЕ","СЛОМЛЕННОСТЬ","НАДМЕННОСТЬ","ОШЕЛОМЛЁННОСТЬ"] },
@@ -416,104 +395,188 @@ const DESCRIPTIONS = {
   ВОЗБУЖДЕНИЕ:"Сильный внутренний подъём и готовность к действию.",
   ПРЕДВКУШЕНИЕ:"Приятное ожидание чего-то хорошего.",
   ВЛЮБЛЁННОСТЬ:"Лёгкое, летящее чувство к кому-то особенному.",
+  УЯЗВЛЁННОСТЬ:"Ощущение, что тебя задели в самое больное место.",
+  ОЦЕПЕНЕНИЕ:"Состояние ступора — ничего не чувствуешь и не можешь двигаться.",
+  ДОСАДА:"Лёгкое раздражение от мелкой неудачи или помехи.",
+  ЗАГНАННОСТЬ:"Чувство, что выхода нет и сил больше нет.",
+  БЕЗЫСХОДНОСТЬ:"Полное отсутствие надежды на изменения.",
+  ПРИНЯТИЕ:"Спокойное согласие с тем, что есть.",
+  ИЗУМЛЕНИЕ:"Острое удивление от чего-то неожиданного и прекрасного.",
 };
 
-let state = { phase:'intro', chosenCategory:null, choiceRounds:[], swipeQueue:[], swipeIndex:0, matches:[] };
+// ─── STATE ──────────────────────────────────────────────────────
+// Flow:
+// Round 0: pick from 4 categories (4 of 5 shown, 1 random omitted)
+// Round 1+: pick from [winner_of_prev_round, 3 new children]
+//   → winner always carried into next round so it can be re-confirmed or dethroned
+// After N rounds (when children pool exhausted): swipe phase
+//   → swipe shows the last winner + close siblings (never winner's path, just refined set)
+
+let state = {
+  category: null,
+  // remaining children not yet shown in any choice round
+  pool: [],
+  // the feeling chosen in the previous round (carried into next)
+  winner: null,
+  // round counter (excluding category round)
+  round: 0,
+  totalRounds: 0,
+  // swipe
+  swipeQueue: [],
+  swipeIndex: 0,
+  swipePicked: [],
+};
 
 function reset() {
-  state = { phase:'intro', chosenCategory:null, choiceRounds:[], swipeQueue:[], swipeIndex:0, matches:[] };
+  state = { category:null, pool:[], winner:null, round:0, totalRounds:0, swipeQueue:[], swipeIndex:0, swipePicked:[] };
 }
 
+// ─── SCREENS ────────────────────────────────────────────────────
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => {
-    if (s.id !== id) { s.classList.add('exit'); setTimeout(() => s.classList.remove('active','exit'), 480); }
+    if (s.id !== id) { s.classList.add('exit'); setTimeout(()=>s.classList.remove('active','exit'),460); }
   });
-  setTimeout(() => document.getElementById(id).classList.add('active'), 30);
+  setTimeout(()=>document.getElementById(id).classList.add('active'), 30);
 }
-
 function setProgress(r) {
   const p = Math.round(Math.min(1,r)*100)+'%';
   document.getElementById('progressFill').style.width = p;
   document.getElementById('progressFill2').style.width = p;
 }
 
-/* ── CATEGORY CHOICE ── */
+// ─── STEP 1: CATEGORY ROUND ─────────────────────────────────────
 function startCategoryChoice() {
-  // Show 4 random categories; 5th goes to swipe fallback
   const cats = shuffle([...CATEGORY_KEYS]);
+  const shown = cats.slice(0, 4);
+  const hidden = cats[4]; // the 5th category — revealed if user clicks "none"
+
   renderChoiceScreen(
-    cats.slice(0,4),
-    'Шаг 1 — выбери общее',
+    shown,
+    'Шаг 1 — общее',
     `Что из этого <span>ближе всего</span> к тому, что ты чувствуешь?`,
-    0.1,
+    0.08,
     (chosen) => {
-      state.chosenCategory = chosen;
-      state.matches = [];
-      const children = shuffle([...EMOTIONS[chosen].children]);
-      buildRounds(children);
-      runNextRound();
+      state.category = chosen;
+      state.winner   = chosen;
+      state.pool = shuffle([...EMOTIONS[chosen].children]);
+      state.totalRounds = Math.ceil(state.pool.length / 3);
+      state.round = 0;
+      runChildRound();
+    },
+    // "none" callback: reveal 5th category, add it to next round as winner candidate
+    () => {
+      // Use the hidden 5th category as the chosen one
+      state.category = hidden;
+      state.winner   = hidden;
+      state.pool = shuffle([...EMOTIONS[hidden].children]);
+      state.totalRounds = Math.ceil(state.pool.length / 3);
+      state.round = 0;
+      runChildRound();
     }
   );
 }
 
-/* ── BUILD ROUNDS OF 4 ── */
-function buildRounds(arr) {
-  state.choiceRounds = [];
-  state.swipeQueue   = [];
-  const copy = [...arr];
-  while (copy.length >= 4) state.choiceRounds.push(copy.splice(0,4));
-  state.swipeQueue = copy; // remainder (0-3 items)
-}
+// ─── CHILD ROUNDS ───────────────────────────────────────────────
+// Each round: [winner_from_prev_round, ...3 new from pool]
+function runChildRound() {
+  // Take 3 new feelings from pool
+  const newOnes = state.pool.splice(0, 3);
 
-let _roundIdx = 0;
-let _totalRounds = 0;
+  if (newOnes.length === 0) {
+    // Pool empty — jump to swipe
+    buildSwipeQueue();
+    startSwipePhase();
+    return;
+  }
 
-function runNextRound() {
-  if (state.choiceRounds.length === 0) { startSwipePhase(); return; }
-  const round = state.choiceRounds.shift();
-  _roundIdx++;
-  _totalRounds = _totalRounds || (_roundIdx + state.choiceRounds.length);
-  const prog = 0.12 + (_roundIdx / (_totalRounds + 2)) * 0.55;
+  state.round++;
+  const progress = 0.1 + (state.round / (state.totalRounds + 1)) * 0.62;
+
+  // Build the 4 options: winner + 3 new (shuffled together)
+  const options = shuffle([state.winner, ...newOnes]);
+
+  // Questions vary by round
+  const questions = [
+    `Какое из этих чувств <span>резонирует</span> с тобой больше всего?`,
+    `Какое из них <span>точнее</span> описывает то, что ты чувствуешь?`,
+    `Что из этого <span>ближе всего</span> к твоему состоянию?`,
+    `Что из этого <span>наиболее точно</span> отражает то, что внутри?`,
+  ];
+  const q = questions[Math.min(state.round - 1, questions.length - 1)];
+
   renderChoiceScreen(
-    round,
-    `Шаг ${_roundIdx + 1} — уточни`,
-    `Какое из этих чувств <span>резонирует</span> с тобой сейчас?`,
-    prog,
+    options,
+    `Шаг ${state.round + 1} — уточни`,
+    q,
+    progress,
     (chosen) => {
-      state.matches.push(chosen);
-      state.swipeQueue.unshift(chosen); // put chosen into swipe for confirmation
-      runNextRound();
-    }
+      state.winner = chosen;
+      runChildRound();
+    },
+    null // no "none" link in child rounds
   );
 }
 
-/* ── GENERIC CHOICE RENDERER ── */
-function renderChoiceScreen(items, label, qHTML, progress, onPick) {
+// ─── RENDER CHOICE SCREEN ───────────────────────────────────────
+function renderChoiceScreen(items, label, qHTML, progress, onPick, onNone) {
   const grid = document.getElementById('choiceGrid');
+  const noneLink = document.getElementById('noneLink');
   grid.innerHTML = '';
   let picked = false;
+
   items.forEach(name => {
     const card = document.createElement('div');
-    card.className = 'choice-card';
+    card.className = 'choice-card'; // no carried highlight
     card.innerHTML = `<div class="choice-name">${name}</div>`;
     card.addEventListener('click', () => {
-      if (picked) return; picked = true;
+      if (picked) return;
+      picked = true;
       card.classList.add('picked');
       setTimeout(() => onPick(name), 270);
     });
     grid.appendChild(card);
   });
+
+  // Show/hide "none" link — only when onNone callback provided (category round)
+  if (onNone) {
+    noneLink.classList.add('visible');
+    noneLink.onclick = () => {
+      if (picked) return;
+      picked = true;
+      noneLink.style.opacity = '0.4';
+      setTimeout(() => onNone(), 200);
+    };
+  } else {
+    noneLink.classList.remove('visible');
+    noneLink.onclick = null;
+  }
+
   document.getElementById('qLabel').textContent = label;
   document.getElementById('qText').innerHTML = qHTML;
   setProgress(progress);
   showScreen('screen-choice');
 }
 
-/* ── SWIPE PHASE ── */
-function startSwipePhase() {
-  if (state.swipeQueue.length === 0) { endWithResult(); return; }
+// ─── BUILD SWIPE QUEUE ──────────────────────────────────────────
+// After all rounds: swipe shows winner + siblings (feelings close to winner,
+// i.e. remaining pool items + a couple already seen but not winner)
+function buildSwipeQueue() {
+  const winner = state.winner;
+  const allChildren = EMOTIONS[state.category].children;
+
+  // Take up to 5 siblings: pool leftovers + random from all (excluding winner)
+  const siblings = allChildren.filter(f => f !== winner);
+  shuffle(siblings);
+  const queue = [winner, ...siblings.slice(0, 4)]; // winner first, then 4 siblings → 5 total (min 3 guaranteed)
+
+  state.swipeQueue = queue;
   state.swipeIndex = 0;
-  setProgress(0.72);
+  state.swipePicked = [];
+}
+
+// ─── SWIPE PHASE ────────────────────────────────────────────────
+function startSwipePhase() {
+  setProgress(0.76);
   showNextSwipe();
   showScreen('screen-swipe');
 }
@@ -522,19 +585,19 @@ function showNextSwipe() {
   if (state.swipeIndex >= state.swipeQueue.length) { endWithResult(); return; }
   const word = state.swipeQueue[state.swipeIndex];
   document.getElementById('swipeWord').textContent = word;
-  document.getElementById('swipeDesc').textContent = DESCRIPTIONS[word] || DESCRIPTIONS[state.chosenCategory] || '';
+  document.getElementById('swipeDesc').textContent = DESCRIPTIONS[word] || DESCRIPTIONS[state.category] || '';
   document.getElementById('swipeNo').style.opacity  = '0';
   document.getElementById('swipeYes').style.opacity = '0';
   const card = document.getElementById('swipeCard');
   card.style.transition = 'none';
   card.style.transform  = 'translateX(0) rotate(0deg)';
   card.style.opacity    = '1';
-  const prog = 0.72 + (state.swipeIndex / state.swipeQueue.length) * 0.24;
+  const prog = 0.76 + (state.swipeIndex / state.swipeQueue.length) * 0.22;
   setProgress(prog);
   document.getElementById('qLabel2').textContent = `${state.swipeIndex+1} из ${state.swipeQueue.length}`;
 }
 
-/* ── SWIPE GESTURE ── */
+// ─── SWIPE GESTURE ──────────────────────────────────────────────
 let drag = { active:false, startX:0, currentX:0 };
 const swipeCardEl = document.getElementById('swipeCard');
 
@@ -544,7 +607,7 @@ function onDragMove(x) {
   drag.currentX = x;
   const dx = drag.currentX - drag.startX;
   swipeCardEl.style.transition = 'none';
-  swipeCardEl.style.transform  = `translateX(${dx}px) rotate(${dx*0.055}deg)`;
+  swipeCardEl.style.transform  = `translateX(${dx}px) rotate(${dx*0.05}deg)`;
   const p = Math.min(1, Math.abs(dx)/80);
   if      (dx < -20) { document.getElementById('swipeNo').style.opacity=p;  document.getElementById('swipeYes').style.opacity=0; }
   else if (dx >  20) { document.getElementById('swipeYes').style.opacity=p; document.getElementById('swipeNo').style.opacity=0; }
@@ -564,14 +627,14 @@ function onDragEnd() {
   }
 }
 function swipeDecide(choice) {
-  const dx = choice==='yes' ? 440 : -440;
+  const dx = choice==='yes' ? 430 : -430;
   swipeCardEl.style.transition = 'transform 0.38s ease, opacity 0.38s ease';
-  swipeCardEl.style.transform  = `translateX(${dx}px) rotate(${dx*0.05}deg)`;
+  swipeCardEl.style.transform  = `translateX(${dx}px) rotate(${dx*0.045}deg)`;
   swipeCardEl.style.opacity    = '0';
-  if (choice==='yes') state.matches.push(state.swipeQueue[state.swipeIndex]);
+  if (choice === 'yes') state.swipePicked.push(state.swipeQueue[state.swipeIndex]);
   state.swipeIndex++;
   setTimeout(() => {
-    if (state.swipeIndex >= state.swipeQueue.length || state.matches.length >= 3) endWithResult();
+    if (state.swipeIndex >= state.swipeQueue.length) endWithResult();
     else showNextSwipe();
   }, 400);
 }
@@ -580,23 +643,31 @@ swipeCardEl.addEventListener('mousedown',  e => onDragStart(e.clientX));
 document.addEventListener('mousemove',     e => { if (drag.active) onDragMove(e.clientX); });
 document.addEventListener('mouseup',       ()  => onDragEnd());
 swipeCardEl.addEventListener('touchstart', e => { e.preventDefault(); onDragStart(e.touches[0].clientX); }, {passive:false});
-document.addEventListener('touchmove',     e => { if (drag.active) { e.preventDefault(); onDragMove(e.touches[0].clientX); } }, {passive:false});
+document.addEventListener('touchmove',     e => { if (drag.active) { e.preventDefault(); onDragMove(e.touches[0].clientX); }}, {passive:false});
 document.addEventListener('touchend',      ()  => onDragEnd());
 
-/* ── RESULT ── */
+// ─── RESULT ─────────────────────────────────────────────────────
 function endWithResult() {
-  let final = state.matches.length > 0
-    ? state.matches[state.matches.length-1]
-    : EMOTIONS[state.chosenCategory].children[Math.floor(Math.random()*4)];
+  // Best answer: last swipe-confirmed feeling, or if none confirmed → round winner
+  let final;
+  if (state.swipePicked.length > 0) {
+    // Prefer the winner if it was confirmed, else last confirmed
+    final = state.swipePicked.includes(state.winner)
+      ? state.winner
+      : state.swipePicked[state.swipePicked.length - 1];
+  } else {
+    final = state.winner;
+  }
+
   document.getElementById('resultName').textContent     = final;
-  document.getElementById('resultCategory').textContent = state.chosenCategory + ' · уточнённое';
-  document.getElementById('resultDesc').textContent     = DESCRIPTIONS[final] || DESCRIPTIONS[state.chosenCategory] || 'Твоё внутреннее состояние сейчас.';
+  document.getElementById('resultCategory').textContent = state.category + ' · уточнённое';
+  document.getElementById('resultDesc').textContent     = DESCRIPTIONS[final] || DESCRIPTIONS[state.category] || 'Твоё внутреннее состояние прямо сейчас.';
   setProgress(1);
   showScreen('screen-result');
-  saveHistory({ name:final, category:state.chosenCategory });
+  saveHistory({ name: final, category: state.category });
 }
 
-/* ── HISTORY ── */
+// ─── HISTORY ────────────────────────────────────────────────────
 function saveHistory(item) {
   const h = JSON.parse(localStorage.getItem('emo_history')||'[]');
   h.unshift({ ...item, time: Date.now() });
@@ -613,18 +684,18 @@ function renderHistory() {
   }).join('');
 }
 
-/* ── UTILS ── */
+// ─── UTILS ──────────────────────────────────────────────────────
 function shuffle(a) {
   for (let i=a.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
   return a;
 }
 
-/* ── BINDINGS ── */
-document.getElementById('startBtn').addEventListener('click',   () => { reset(); _roundIdx=0; _totalRounds=0; startCategoryChoice(); });
-document.getElementById('restartBtn').addEventListener('click', () => { reset(); _roundIdx=0; _totalRounds=0; startCategoryChoice(); });
+// ─── BINDINGS ───────────────────────────────────────────────────
+document.getElementById('startBtn').addEventListener('click',   () => { reset(); startCategoryChoice(); });
+document.getElementById('restartBtn').addEventListener('click', () => { reset(); startCategoryChoice(); });
 document.getElementById('saveBtn').addEventListener('click', () => {
   const b = document.getElementById('saveBtn');
-  b.textContent = 'Сохранено ✓'; setTimeout(() => b.textContent='Сохранить', 2000);
+  b.textContent='Сохранено ✓'; setTimeout(()=>b.textContent='Сохранить',2000);
 });
 document.getElementById('historyBtn').addEventListener('click',  () => { renderHistory(); document.getElementById('historyPanel').classList.add('open'); });
 document.getElementById('historyClose').addEventListener('click',() => { document.getElementById('historyPanel').classList.remove('open'); });
