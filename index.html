@@ -128,27 +128,22 @@
     .choice-card {
       background: var(--surface); border: 1.5px solid var(--border);
       border-radius: var(--r);
-      cursor: pointer; backdrop-filter: blur(10px);
-      transition: border-color 0.18s, transform 0.12s, box-shadow 0.18s;
+      cursor: pointer;
+      transition: border-color 0.18s, box-shadow 0.18s;
       position: relative; user-select: none;
       min-height: 76px;
       box-shadow: 0 2px 12px rgba(100,140,180,0.08);
-      overflow: hidden;
-      perspective: 800px;
+      perspective: 1000px;
     }
     .choice-card:active { transform: scale(0.95); }
     .choice-card.picked { border-color: var(--brown-light); background: rgba(200,140,88,0.12); box-shadow: 0 0 0 2px rgba(200,140,88,0.2); }
-    .choice-name { font-size: 0.97rem; font-weight: 600; color: var(--text); position: relative; z-index: 1; line-height: 1.2; }
+    .choice-name { font-size: 0.97rem; font-weight: 600; color: var(--text); line-height: 1.2; user-select: none; -webkit-user-select: none; }
 
     /* ── FLIP CARD ── */
-    .choice-card {
-      perspective: 800px;
-    }
     .card-inner {
-      position: relative; width: 100%; height: 100%;
+      position: relative; width: 100%; padding-bottom: 76px;
       transform-style: preserve-3d;
-      transition: transform 0.45s cubic-bezier(0.4,0,0.2,1);
-      border-radius: calc(var(--r) - 2px);
+      transition: transform 0.42s cubic-bezier(0.4,0,0.2,1);
     }
     .card-inner.flipped { transform: rotateY(180deg); }
 
@@ -157,20 +152,32 @@
       backface-visibility: hidden; -webkit-backface-visibility: hidden;
       border-radius: calc(var(--r) - 2px);
       display: flex; align-items: center; justify-content: center;
-      padding: 10px;
+      padding: 12px 10px;
+      user-select: none; -webkit-user-select: none;
     }
+    .card-front { background: transparent; }
     .card-back {
       transform: rotateY(180deg);
-      background: rgba(255,255,255,0.88);
-      flex-direction: column; gap: 4px;
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: none; -webkit-backdrop-filter: none;
+      flex-direction: column; gap: 5px;
     }
     .card-back-title {
-      font-size: 0.68rem; font-weight: 600; color: var(--brown);
-      letter-spacing: 0.08em; text-transform: uppercase;
+      font-size: 0.65rem; font-weight: 600; color: var(--brown);
+      letter-spacing: 0.09em; text-transform: uppercase;
+      user-select: none; -webkit-user-select: none;
     }
     .card-back-desc {
-      font-size: 0.75rem; color: var(--text-mid); text-align: center;
+      font-size: 0.74rem; color: var(--text-mid); text-align: center;
       line-height: 1.45; font-weight: 300;
+      user-select: none; -webkit-user-select: none;
+    }
+
+    /* Swipe-flip hint shown below grid */
+    .flip-hint {
+      margin-top: 10px; font-size: 0.68rem; color: var(--text-muted);
+      letter-spacing: 0.06em; text-align: center;
+      opacity: 0.7;
     }
 
     /* "None of the above" link — only shown in category round */
@@ -323,6 +330,7 @@
     <div class="q-text" id="qText"></div>
     <div class="choice-grid" id="choiceGrid"></div>
     <span class="none-link" id="noneLink">Ничего из вышеперечисленного</span>
+    <div class="flip-hint" id="flipHint">← свайп по карточке, чтобы узнать подробнее</div>
   </div>
 
   <!-- SWIPE -->
@@ -427,6 +435,56 @@ const DESCRIPTIONS = {
   БЕЗЫСХОДНОСТЬ:"Полное отсутствие надежды на изменения.",
   ПРИНЯТИЕ:"Спокойное согласие с тем, что есть.",
   ИЗУМЛЕНИЕ:"Острое удивление от чего-то неожиданного и прекрасного.",
+  ИСТЕРИЯ:"Потеря контроля над эмоциями — всё внутри кипит и выплёскивается.",
+  ПРЕЗРЕНИЕ:"Ощущение превосходства над кем-то, кто кажется недостойным.",
+  НЕГОДОВАНИЕ:"Горячий протест против несправедливости или нарушения правил.",
+  РЕВНОСТЬ:"Страх потерять кого-то важного из-за другого человека.",
+  ЗАВИСТЬ:"Желание иметь то, что есть у другого, с горечью от его отсутствия.",
+  НЕПРИЯЗНЬ:"Устойчивое тихое отвержение кого-то или чего-то.",
+  ВОЗМУЩЕНИЕ:"Острая реакция на что-то неприемлемое или недопустимое.",
+  ОТВРАЩЕНИЕ:"Физическое и эмоциональное отторжение от чего-то противного.",
+  ИСПУГ:"Внезапный всплеск страха в ответ на неожиданное.",
+  ПОДОЗРЕНИЕ:"Недоверие, ощущение что что-то скрывается или идёт не так.",
+  ОШАРАШЕННОСТЬ:"Состояние после шока — ещё не понял, что произошло.",
+  УНИЖЕНИЕ:"Ощущение, что тебя намеренно опустили или обесценили.",
+  ЗАМЕШАТЕЛЬСТВО:"Не знаешь как реагировать — мысли и чувства смешались.",
+  РАСТЕРЯННОСТЬ:"Потеря ориентиров — не знаешь что делать дальше.",
+  СОМНЕНИЕ:"Колебание между двумя вариантами, неуверенность в правильности.",
+  ЗАСТЕНЧИВОСТЬ:"Смущение от внимания других, желание остаться незамеченным.",
+  ОПАСЕНИЕ:"Тихий страх перед чем-то, что может случиться.",
+  СМУЩЕНИЕ:"Неловкость от того, что оказался в центре внимания.",
+  СЛОМЛЕННОСТЬ:"Ощущение, что сил сопротивляться больше нет.",
+  НАДМЕННОСТЬ:"Чувство своего превосходства, высокомерие по отношению к другим.",
+  ОШЕЛОМЛЁННОСТЬ:"Полная растерянность от чего-то слишком большого или неожиданного.",
+  СКОРБЬ:"Глубокая боль от невосполнимой потери.",
+  ЛЕНЬ:"Отсутствие желания и энергии что-либо делать.",
+  ЖАЛОСТЬ:"Сострадание к тому, кто страдает или попал в беду.",
+  ОТРЕШЁННОСТЬ:"Ощущение, что ты наблюдаешь за жизнью со стороны.",
+  БЕСПОМОЩНОСТЬ:"Понимание, что ты не можешь изменить то, что происходит.",
+  "ДУШЕВНАЯ БОЛЬ":"Острая внутренняя боль, которую трудно описать словами.",
+  БЕЗНАДЁЖНОСТЬ:"Убеждённость, что ничего уже не изменится к лучшему.",
+  ПОТРЯСЕНИЕ:"Сильное эмоциональное потрясение от чего-то неожиданного.",
+  ЛИКОВАНИЕ:"Бурная, переполняющая радость — хочется кричать от счастья.",
+  ПРИПОДНЯТОСТЬ:"Лёгкое ощущение подъёма и хорошего настроения.",
+  ОЖИВЛЕНИЕ:"Прилив энергии и интереса к происходящему.",
+  УВЛЕЧЕНИЕ:"Захваченность чем-то — время летит незаметно.",
+  ИНТЕРЕС:"Желание узнать больше, вникнуть глубже.",
+  ЗАБОТА:"Тёплое желание позаботиться о ком-то или о себе.",
+  ОЖИДАНИЕ:"Напряжённое предвкушение того, что должно произойти.",
+  ОСВОБОЖДЕНИЕ:"Облегчение от того, что груз наконец снят.",
+  НЕТЕРПЕНИЕ:"Трудно ждать — хочется чтобы это случилось прямо сейчас.",
+  ВЕРА:"Глубокое убеждение в том, что всё будет хорошо.",
+  СОЧУВСТВИЕ:"Ощущение чужой боли как своей, желание помочь.",
+  БЛАЖЕНСТВО:"Полное, тихое счастье — всё идеально прямо сейчас.",
+  БЕЗОПАСНОСТЬ:"Ощущение защищённости и отсутствия угрозы.",
+  СИМПАТИЯ:"Тёплое расположение к кому-то, желание сближения.",
+  УВАЖЕНИЕ:"Признание ценности и достоинства другого человека.",
+  САМОЦЕННОСТЬ:"Ощущение своей значимости вне зависимости от оценок других.",
+  "ЛЮБОВЬ К СЕБЕ":"Принятие и забота о себе как о важном и достойном человеке.",
+  ОЧАРОВАННОСТЬ:"Восхищение кем-то или чем-то, невозможность отвести взгляд.",
+  ДРУЖЕЛЮБИЕ:"Открытость и тепло по отношению к окружающим.",
+  ДОБРОТА:"Искреннее желание сделать что-то хорошее для другого.",
+  ВЗАИМОВЫРУЧКА:"Радость от того, что вы поддерживаете друг друга.",
 };
 
 // ─── STATE ──────────────────────────────────────────────────────
@@ -543,55 +601,34 @@ function runChildRound() {
 }
 
 // ─── RENDER CHOICE SCREEN ───────────────────────────────────────
+// Flip behaviour: swipe LEFT on grid → flip all cards to back (show descriptions)
+//                swipe RIGHT on grid → flip all back to front
+// Tap = pick a feeling (works on both front and back face)
 function renderChoiceScreen(items, label, qHTML, progress, onPick, onNone) {
   const grid = document.getElementById('choiceGrid');
   const noneLink = document.getElementById('noneLink');
+  const flipHint = document.getElementById('flipHint');
   grid.innerHTML = '';
   let picked = false;
+  let allFlipped = false;
 
-  items.forEach(name => {
+  // Build cards
+  const cards = items.map(name => {
     const desc = DESCRIPTIONS[name] || '';
     const card = document.createElement('div');
     card.className = 'choice-card';
-
-    // Inner flip structure
     card.innerHTML = `
       <div class="card-inner">
-        <div class="card-front">
-          <div class="choice-name">${name}</div>
-        </div>
+        <div class="card-front"><div class="choice-name">${name}</div></div>
         <div class="card-back">
           <div class="card-back-title">${name}</div>
           <div class="card-back-desc">${desc}</div>
         </div>
       </div>`;
 
-    const inner = card.querySelector('.card-inner');
-    let pressTimer = null;
-    let isFlipped = false;
-    let didFlip = false;
-
-    // Long press: flip to show description
-    const startPress = () => {
-      didFlip = false;
-      pressTimer = setTimeout(() => {
-        isFlipped = !isFlipped;
-        inner.classList.toggle('flipped', isFlipped);
-        didFlip = true;
-      }, 500);
-    };
-    const cancelPress = () => { clearTimeout(pressTimer); };
-
-    card.addEventListener('mousedown',  startPress);
-    card.addEventListener('touchstart', startPress, {passive:true});
-    card.addEventListener('mouseup',    cancelPress);
-    card.addEventListener('touchend',   cancelPress);
-    card.addEventListener('mouseleave', cancelPress);
-
-    // Short tap: pick (only if not a flip action)
-    card.addEventListener('click', () => {
-      if (didFlip) { didFlip = false; return; } // was a long press — ignore click
-      if (isFlipped) { inner.classList.remove('flipped'); isFlipped = false; return; } // tap flips back
+    // Tap = pick
+    card.addEventListener('click', (e) => {
+      if (swipeWasGesture) return; // swipe consumed this touch
       if (picked) return;
       picked = true;
       card.classList.add('picked');
@@ -599,9 +636,51 @@ function renderChoiceScreen(items, label, qHTML, progress, onPick, onNone) {
     });
 
     grid.appendChild(card);
+    return card;
   });
 
-  // Show/hide "none" link
+  function flipAll(toBack) {
+    allFlipped = toBack;
+    cards.forEach(c => {
+      c.querySelector('.card-inner').classList.toggle('flipped', toBack);
+    });
+  }
+
+  // ── Swipe detection on the grid ──
+  let swipeStartX = 0, swipeStartY = 0, swipeWasGesture = false;
+
+  grid.addEventListener('touchstart', e => {
+    swipeStartX = e.touches[0].clientX;
+    swipeStartY = e.touches[0].clientY;
+    swipeWasGesture = false;
+  }, { passive: true });
+
+  grid.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - swipeStartX;
+    const dy = e.changedTouches[0].clientY - swipeStartY;
+    // Only count as horizontal swipe if horizontal movement dominates
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      swipeWasGesture = true;
+      if (dx < 0) flipAll(true);   // swipe left → show descriptions
+      else         flipAll(false);  // swipe right → show names
+    }
+  }, { passive: true });
+
+  // Mouse swipe support
+  let mouseStartX = 0, mouseDown = false;
+  grid.addEventListener('mousedown', e => { mouseDown = true; mouseStartX = e.clientX; swipeWasGesture = false; });
+  grid.addEventListener('mouseup',   e => {
+    if (!mouseDown) return;
+    mouseDown = false;
+    const dx = e.clientX - mouseStartX;
+    if (Math.abs(dx) > 40) {
+      swipeWasGesture = true;
+      if (dx < 0) flipAll(true);
+      else         flipAll(false);
+    }
+  });
+
+  // Show/hide "none" link & flip hint
   if (onNone) {
     noneLink.classList.add('visible');
     noneLink.style.opacity = '1';
@@ -615,6 +694,7 @@ function renderChoiceScreen(items, label, qHTML, progress, onPick, onNone) {
     noneLink.classList.remove('visible');
     noneLink.onclick = null;
   }
+  flipHint.style.display = 'block';
 
   document.getElementById('qLabel').textContent = label;
   document.getElementById('qText').innerHTML = qHTML;
@@ -641,6 +721,7 @@ function buildSwipeQueue() {
 
 // ─── SWIPE PHASE ────────────────────────────────────────────────
 function startSwipePhase() {
+  document.getElementById('flipHint').style.display = 'none';
   setProgress(0.76);
   showNextSwipe();
   showScreen('screen-swipe');
