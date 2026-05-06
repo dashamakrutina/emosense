@@ -55,8 +55,18 @@
     .screen.exit   { opacity: 0; transform: translateY(-12px); }
 
     /* ── INTRO ── */
-    .logo-heart { width: 160px; height: 160px; border-radius: 36px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 12px 40px rgba(120,160,200,0.22); }
-    .logo-heart img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .logo-heart {
+      width: 220px; height: 220px;
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+    .logo-heart img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
     .logo-icon { width: 72px; height: 72px; border-radius: 16px; overflow: hidden; margin-bottom: 16px; }
     .logo-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .logo-title {
@@ -312,7 +322,7 @@
   <!-- INTRO -->
   <div class="screen active" id="screen-intro">
     <div style="display:flex;flex-direction:column;align-items:center;">
-      <div class="logo-heart"><img src="icon-192.png" alt=""/></div>
+      <div class="logo-heart"><img src="icon-512.png" alt="" draggable="false"/></div>
       <div class="logo-title">Emosense</div>
       <div class="logo-sub">Распознай себя</div>
     </div>
@@ -702,46 +712,240 @@ function renderChoiceScreen(items, label, qHTML, progress, onPick, onNone) {
   showScreen('screen-choice');
 }
 
-// ─── BUILD SWIPE QUEUE ──────────────────────────────────────────
-// After all rounds: swipe shows winner + siblings (feelings close to winner,
-// i.e. remaining pool items + a couple already seen but not winner)
+// ─── SWIPE PHASE: BINARY SEARCH ALONG TABLE ORDER ───────────────
+//
+// The children[] array preserves top-to-bottom order from the table.
+// Winner index = winnerIdx. We probe neighbours to find where the user
+// sits on the scale.
+//
+// State machine:
+//   phase 'probe'   → show neighbour above (idx-1) and below (idx+1) winner
+//   phase 'confirm' → show winner itself
+//   phase 'expand'  → show ±2 neighbours (when winner was rejected)
+//   phase 'recheck' → show winner again after expand
+//   phase 'done'    → end
+//
+// After each swipe answer we decide what to show next.
+
 function buildSwipeQueue() {
-  const winner = state.winner;
-  const allChildren = EMOTIONS[state.category].children;
+  const list   = EMOTIONS[state.category].children;
+  const winIdx = list.indexOf(state.winner);
 
-  // Take up to 5 siblings: pool leftovers + random from all (excluding winner)
-  const siblings = allChildren.filter(f => f !== winner);
-  shuffle(siblings);
-  const queue = [winner, ...siblings.slice(0, 4)]; // winner first, then 4 siblings → 5 total (min 3 guaranteed)
-
-  state.swipeQueue = queue;
+  // If winner not in children (e.g. category itself was winner) → use index 0
+  state.swipe = {
+    list,
+    winIdx:  winIdx >= 0 ? winIdx : 0,
+    phase:   'probe',      // current phase
+    above:   null,         // result for item above winner: true/false/null
+    below:   null,         // result for item below winner: true/false/null
+    probeOrder: Math.random() < 0.5 ? ['above','below'] : ['below','above'],
+    probeDone:  0,         // how many of the two probes shown
+    expand: {              // used in expand phase
+      above2: null,
+      below2: null,
+      order:  [],
+      done:   0,
+    },
+    yesCandidate: null,    // the candidate from expand phase that got 'yes'
+  };
   state.swipeIndex = 0;
   state.swipePicked = [];
 }
 
-// ─── SWIPE PHASE ────────────────────────────────────────────────
 function startSwipePhase() {
   document.getElementById('flipHint').style.display = 'none';
   setProgress(0.76);
-  showNextSwipe();
   showScreen('screen-swipe');
+  nextSwipeCard();
 }
 
-function showNextSwipe() {
-  if (state.swipeIndex >= state.swipeQueue.length) { endWithResult(); return; }
-  const word = state.swipeQueue[state.swipeIndex];
+// ── Main dispatcher ──────────────────────────────────────────────
+function nextSwipeCard() {
+  const s    = state.swipe;
+  const list = s.list;
+  const wi   = s.winIdx;
+
+  if (s.phase === 'probe') {
+    const side = s.probeOrder[s.probeDone];
+    const idx  = side === 'above' ? wi - 1 : wi + 1;
+
+    if (idx < 0 || idx >= list.length) {
+      // Edge of list — mark this side as null (no neighbour), skip
+      if (side === 'above') s.above = 'edge';
+      else                  s.below = 'edge';
+      s.probeDone++;
+      if (s.probeDone < 2) { nextSwipeCard(); return; }
+      afterProbe(); return;
+    }
+    showSwipeCard(list[idx], (yes) => {
+      if (side === 'above') s.above = yes;
+      else                  s.below = yes;
+      s.probeDone++;
+      if (s.probeDone < 2) nextSwipeCard();
+      else afterProbe();
+    });
+    return;
+  }
+
+  if (s.phase === 'confirm') {
+    showSwipeCard(list[wi], (yes) => {
+      if (yes) { endWithResult(list[wi]); return; }
+      // Winner rejected → expand to ±2
+      s.phase = 'expand';
+      s.expand.order  = Math.random() < 0.5
+        ? ['above2','below2'] : ['below2','above2'];
+      s.expand.done   = 0;
+      s.expand.above2 = null;
+      s.expand.below2 = null;
+      nextSwipeCard();
+    });
+    return;
+  }
+
+  if (s.phase === 'expand') {
+    const side = s.expand.order[s.expand.done];
+    const idx  = side === 'above2' ? wi - 2 : wi + 2;
+
+    if (idx < 0 || idx >= list.length) {
+      if (side === 'above2') s.expand.above2 = 'edge';
+      else                   s.expand.below2 = 'edge';
+      s.expand.done++;
+      if (s.expand.done < 2) { nextSwipeCard(); return; }
+      afterExpand(); return;
+    }
+    showSwipeCard(list[idx], (yes) => {
+      if (side === 'above2') s.expand.above2 = yes;
+      else                   s.expand.below2 = yes;
+      s.expand.done++;
+      if (s.expand.done < 2) nextSwipeCard();
+      else afterExpand();
+    });
+    return;
+  }
+
+  if (s.phase === 'recheck') {
+    // Show the yesCandidate's neighbour toward winner, then winner
+    const cIdx = list.indexOf(s.yesCandidate);
+    // Neighbour between yesCandidate and winner
+    const midIdx = cIdx < wi ? cIdx + 1 : cIdx - 1;
+    const mid = (midIdx >= 0 && midIdx < list.length) ? list[midIdx] : null;
+
+    if (mid && mid !== list[wi]) {
+      showSwipeCard(mid, (yes) => {
+        s.recheckMidYes = yes;
+        // Now show winner
+        showSwipeCard(list[wi], (yes2) => {
+          // Both same → yesCandidate wins
+          if (yes === yes2) { endWithResult(s.yesCandidate); return; }
+          // Different → whichever was 'yes' is winner
+          endWithResult(yes ? mid : list[wi]);
+        });
+      });
+    } else {
+      // No mid — just show winner
+      showSwipeCard(list[wi], (yes) => {
+        endWithResult(yes ? list[wi] : s.yesCandidate);
+      });
+    }
+    return;
+  }
+}
+
+// ── After both probes (above + below winner) ─────────────────────
+function afterProbe() {
+  const s  = state.swipe;
+  const wi = s.winIdx;
+  const a  = s.above;  // true / false / 'edge'
+  const b  = s.below;
+
+  const aYes = a === true;
+  const bYes = b === true;
+
+  if (aYes === bYes) {
+    // Both same → confirm winner
+    s.phase = 'confirm';
+    nextSwipeCard();
+  } else {
+    // One yes, one no → narrow toward the 'yes' side
+    // Show neighbour of the 'yes' item closer to winner, then winner
+    s.phase = 'recheck';
+    // yesCandidate is the item that got 'yes'
+    const list = s.list;
+    if (aYes) {
+      s.yesCandidate = list[wi - 1]; // above was yes
+    } else {
+      s.yesCandidate = list[wi + 1]; // below was yes
+    }
+    nextSwipeCard();
+  }
+}
+
+// ── After both ±2 expand probes ──────────────────────────────────
+function afterExpand() {
+  const s  = state.swipe;
+  const a2 = s.expand.above2;
+  const b2 = s.expand.below2;
+
+  const aYes = a2 === true;
+  const bYes = b2 === true;
+
+  if (aYes === bYes) {
+    // Both same → do a recheck with a 4-card choice screen
+    endWithRecheck();
+  } else {
+    // One yes → that one wins
+    const list = s.list;
+    const wi   = s.winIdx;
+    const winner = aYes ? list[wi - 2] : list[wi + 2];
+    endWithResult(winner || list[wi]);
+  }
+}
+
+// ── Recheck: show 4 candidates as choice cards ───────────────────
+function endWithRecheck() {
+  const s    = state.swipe;
+  const list = s.list;
+  const wi   = s.winIdx;
+
+  // Pick up to 4 candidates around the winner
+  const candidates = [];
+  for (let d = -2; d <= 2; d++) {
+    const idx = wi + d;
+    if (idx >= 0 && idx < list.length) candidates.push(list[idx]);
+  }
+  const shown = candidates.slice(0, 4);
+
+  renderChoiceScreen(
+    shown,
+    'Уточним ещё раз',
+    `Какое из этих чувств <span>наиболее точно</span> описывает твоё состояние?`,
+    0.95,
+    (chosen) => endWithResult(chosen),
+    null
+  );
+}
+
+// ── Show one swipe card and call back with boolean ────────────────
+function showSwipeCard(word, onAnswer) {
+  const card = document.getElementById('swipeCard');
   document.getElementById('swipeWord').textContent = word;
-  document.getElementById('swipeDesc').textContent = DESCRIPTIONS[word] || DESCRIPTIONS[state.category] || '';
+  document.getElementById('swipeDesc').textContent =
+    DESCRIPTIONS[word] || DESCRIPTIONS[state.category] || '';
   document.getElementById('swipeNo').style.opacity  = '0';
   document.getElementById('swipeYes').style.opacity = '0';
-  const card = document.getElementById('swipeCard');
   card.style.transition = 'none';
   card.style.transform  = 'translateX(0) rotate(0deg)';
   card.style.opacity    = '1';
-  const prog = 0.76 + (state.swipeIndex / state.swipeQueue.length) * 0.22;
+
+  // Progress heuristic
+  const prog = Math.min(0.97, 0.76 + state.swipeIndex * 0.04);
   setProgress(prog);
-  document.getElementById('qLabel2').textContent = `${state.swipeIndex+1} из ${state.swipeQueue.length}`;
+  state.swipeIndex++;
+
+  // Store callback
+  state._swipeCallback = onAnswer;
 }
+
 
 // ─── SWIPE GESTURE ──────────────────────────────────────────────
 let drag = { active:false, startX:0, currentX:0 };
@@ -773,16 +977,14 @@ function onDragEnd() {
   }
 }
 function swipeDecide(choice) {
-  const dx = choice==='yes' ? 430 : -430;
+  const yes = choice === 'yes';
+  const dx  = yes ? 430 : -430;
   swipeCardEl.style.transition = 'transform 0.38s ease, opacity 0.38s ease';
   swipeCardEl.style.transform  = `translateX(${dx}px) rotate(${dx*0.045}deg)`;
   swipeCardEl.style.opacity    = '0';
-  if (choice === 'yes') state.swipePicked.push(state.swipeQueue[state.swipeIndex]);
-  state.swipeIndex++;
-  setTimeout(() => {
-    if (state.swipeIndex >= state.swipeQueue.length) endWithResult();
-    else showNextSwipe();
-  }, 400);
+  const cb = state._swipeCallback;
+  state._swipeCallback = null;
+  setTimeout(() => { if (cb) cb(yes); }, 400);
 }
 
 swipeCardEl.addEventListener('mousedown',  e => onDragStart(e.clientX));
@@ -793,17 +995,8 @@ document.addEventListener('touchmove',     e => { if (drag.active) { e.preventDe
 document.addEventListener('touchend',      ()  => onDragEnd());
 
 // ─── RESULT ─────────────────────────────────────────────────────
-function endWithResult() {
-  // Best answer: last swipe-confirmed feeling, or if none confirmed → round winner
-  let final;
-  if (state.swipePicked.length > 0) {
-    // Prefer the winner if it was confirmed, else last confirmed
-    final = state.swipePicked.includes(state.winner)
-      ? state.winner
-      : state.swipePicked[state.swipePicked.length - 1];
-  } else {
-    final = state.winner;
-  }
+function endWithResult(final) {
+  if (!final) final = state.winner;
 
   document.getElementById('resultName').textContent     = final;
   document.getElementById('resultCategory').textContent = state.category + ' · уточнённое';
