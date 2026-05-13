@@ -1039,7 +1039,25 @@ document.getElementById('saveBtn').addEventListener('click', () => {
 document.getElementById('historyBtn').addEventListener('click',  () => { renderHistory(); document.getElementById('historyPanel').classList.add('open'); });
 document.getElementById('historyClose').addEventListener('click',() => { document.getElementById('historyPanel').classList.remove('open'); });
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    // Check for updates every time the page loads
+    reg.update();
+    // When a new SW is waiting — reload automatically
+    reg.addEventListener('updatefound', () => {
+      const newSW = reg.installing;
+      newSW.addEventListener('statechange', () => {
+        if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+          // New version ready — reload to get fresh content
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            window.location.reload();
+          });
+          newSW.postMessage({ type: 'SKIP_WAITING' });
+        }
+      });
+    });
+  }).catch(() => {});
+}
 </script>
 </body>
 </html>
