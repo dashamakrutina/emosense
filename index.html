@@ -303,7 +303,20 @@
       background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px;
       padding: 13px 15px; display: flex; align-items: center; gap: 13px;
       backdrop-filter: blur(8px);
+      position: relative; overflow: hidden;
+      transition: transform 0.3s ease, opacity 0.3s ease;
     }
+    .history-item.removing {
+      transform: translateX(100%); opacity: 0;
+    }
+    .history-item-delete {
+      flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+      background: none; border: 1.5px solid rgba(160,104,60,0.3);
+      color: var(--brown); font-size: 0.9rem; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.2s, border-color 0.2s;
+    }
+    .history-item-delete:active { background: rgba(160,104,60,0.12); border-color: var(--brown); }
     .history-item-dot { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, #7aa0c0, #c88c58); }
     .history-item-info { flex: 1; }
     .history-item-name { font-size: 0.97rem; font-weight: 600; color: var(--text); }
@@ -382,7 +395,10 @@
 <!-- HISTORY -->
 <div class="history-panel" id="historyPanel">
   <button class="history-close" id="historyClose">✕</button>
-  <h2>История</h2>
+  <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px;">
+    <h2 style="margin-bottom:0;">История</h2>
+    <button id="historyClearAll" style="display:none;background:none;border:none;font-size:0.78rem;color:var(--brown);font-family:'Jost',sans-serif;font-weight:500;cursor:pointer;letter-spacing:0.04em;">Очистить всё</button>
+  </div>
   <div class="history-list" id="historyList"></div>
 </div>
 
@@ -1012,15 +1028,52 @@ function saveHistory(item) {
   h.unshift({ ...item, time: Date.now() });
   localStorage.setItem('emo_history', JSON.stringify(h.slice(0,60)));
 }
+function deleteHistoryItem(time) {
+  let h = JSON.parse(localStorage.getItem('emo_history')||'[]');
+  h = h.filter(i => i.time !== time);
+  localStorage.setItem('emo_history', JSON.stringify(h));
+}
+
 function renderHistory() {
   const h = JSON.parse(localStorage.getItem('emo_history')||'[]');
   const list = document.getElementById('historyList');
-  if (!h.length) { list.innerHTML='<div class="history-empty">Пока нет сохранённых чувств</div>'; return; }
-  list.innerHTML = h.map(i => {
+
+  // Update "clear all" button visibility
+  const clearBtn = document.getElementById('historyClearAll');
+  if (clearBtn) clearBtn.style.display = h.length ? 'block' : 'none';
+
+  if (!h.length) {
+    list.innerHTML = '<div class="history-empty">Пока нет сохранённых чувств</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  h.forEach(i => {
     const d = new Date(i.time);
-    const t = d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
-    return `<div class="history-item"><div class="history-item-dot"></div><div class="history-item-info"><div class="history-item-name">${i.name}</div><div class="history-item-cat">${i.category}</div></div><div class="history-item-time">${t}</div></div>`;
-  }).join('');
+    const t = d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'}) + ' ' +
+              d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+
+    const el = document.createElement('div');
+    el.className = 'history-item';
+    el.innerHTML = `
+      <div class="history-item-dot"></div>
+      <div class="history-item-info">
+        <div class="history-item-name">${i.name}</div>
+        <div class="history-item-cat">${i.category}</div>
+      </div>
+      <div class="history-item-time">${t}</div>
+      <button class="history-item-delete" title="Удалить">✕</button>`;
+
+    el.querySelector('.history-item-delete').addEventListener('click', () => {
+      el.classList.add('removing');
+      setTimeout(() => {
+        deleteHistoryItem(i.time);
+        renderHistory();
+      }, 300);
+    });
+
+    list.appendChild(el);
+  });
 }
 
 // ─── UTILS ──────────────────────────────────────────────────────
@@ -1038,6 +1091,10 @@ document.getElementById('saveBtn').addEventListener('click', () => {
 });
 document.getElementById('historyBtn').addEventListener('click',  () => { renderHistory(); document.getElementById('historyPanel').classList.add('open'); });
 document.getElementById('historyClose').addEventListener('click',() => { document.getElementById('historyPanel').classList.remove('open'); });
+document.getElementById('historyClearAll').addEventListener('click', () => {
+  localStorage.removeItem('emo_history');
+  renderHistory();
+});
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').then(reg => {
